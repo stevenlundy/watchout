@@ -59,13 +59,24 @@ var updateEnemies = function(){
     .attr('cx', function(d) { return d.x })
     .attr('r', function(d) { return d.r })
     .attr('class', 'enemy');
-
+debugger;
   // ENTER + UPDATE
 
   // EXIT
 
   setTimeout(updateEnemies, 1000);
 };
+
+var dragged = function(d) {
+  d3.select(this)
+    .attr('cx', d.x = d3.event.x)
+    .attr('cy', d.y = d3.event.y);
+}
+window.drag = d3.behavior.drag()
+  // .on('dragstart', dragstarted)
+  .on('drag', dragged);
+  // .on('dragend', dragended)
+
 
 var updatePlayers = function(){
   // DATA JOIN
@@ -80,7 +91,8 @@ var updatePlayers = function(){
     .attr('cx', function(d) { return d.x })
     .attr('r', function(d) { return d.r })
     .attr('fill', 'red')
-    .attr('class', 'player');
+    .attr('class', 'player')
+    .call(window.drag);
 
   // ENTER + UPDATE
 

@@ -5,6 +5,23 @@ var Enemy = function(x, y) {
   this.r = 10;
 };
 
+var Shuriken = function(x, y){
+  Enemy.call(this, x, y);
+  this.r = undefined;
+  this.width = 30;
+  this.height = 30;
+  this.url = 'http://www.wpclipart.com/weapons/knife/throwing/Shuriken_T.png';
+}
+Shuriken.prototype = Object.create(Enemy.prototype);
+Shuriken.prototype.constructor = Shuriken;
+Shuriken.prototype.getCenterX = function() {
+  return this.x + this.width/2;
+};
+Shuriken.prototype.getCenterY = function() {
+  return this.y + this.height/2;
+};
+
+
 var Player = function() {
   this.x = window.board.width/2;
   this.y = window.board.height/2;
@@ -32,7 +49,7 @@ var init = function(){
   for (var i = 0; i < window.board.numEnemies; i++) {
     var x = randomBetween(1, board.width);
     var y = randomBetween(1, board.height);
-    window.board.enemies.push(new Enemy(x, y));
+    window.board.enemies.push(new Shuriken(x, y));
   }
   updateEnemies();
 
@@ -59,20 +76,22 @@ var updateEnemies = function(){
 
   // UPDATE
   enemies.transition().duration(1000)
-    .attr('cy', function(d) { 
+    .attr('y', function(d) { 
       d.y = randomBetween(1, window.board.height);
       return d.y;
     })
-    .attr('cx', function(d) { 
+    .attr('x', function(d) { 
       d.x = randomBetween(1, window.board.width);
       return d.x;
     });
 
   // ENTER
-  enemies.enter().append('circle')
-    .attr('cy', function(d) { return d.y })
-    .attr('cx', function(d) { return d.x })
-    .attr('r', function(d) { return d.r })
+  enemies.enter().append('image')
+    .attr('y', function(d) { return d.y })
+    .attr('x', function(d) { return d.x })
+    .attr('height', function(d) { return d.height })
+    .attr('width', function(d) { return d.width })
+    .attr('xlink:href', function(d) { return d.url })
     .attr('class', 'enemy');
 
   // ENTER + UPDATE
@@ -141,9 +160,9 @@ var checkCollision = function(obj, colliders) {
   var ar = parseInt(d3.select(obj).attr('r'));
 
   for (var i = 0; i < colliders.length; i++) {
-    var bx = parseInt(d3.select(colliders[i]).attr('cx'));
-    var by = parseInt(d3.select(colliders[i]).attr('cy'));
-    var br = parseInt(d3.select(colliders[i]).attr('r'));
+    var bx = parseInt(d3.select(colliders[i]).attr('x')) + parseInt(d3.select(colliders[i]).attr('width'))/2;
+    var by = parseInt(d3.select(colliders[i]).attr('y')) + parseInt(d3.select(colliders[i]).attr('height'))/2;
+    var br = parseInt(d3.select(colliders[i]).attr('width'))/2;
 
     var dist = Math.sqrt(Math.pow(bx - ax, 2) + Math.pow(by - ay, 2));
     if (dist < ar + br) {

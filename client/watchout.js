@@ -16,7 +16,7 @@ var init = function(){
     width: 700,
     height: 500,
     numPlayers: 1,
-    numEnemies: 20,
+    numEnemies: 2,
     enemies: [],
     players: []
   };  
@@ -59,7 +59,7 @@ var updateEnemies = function(){
     .attr('cx', function(d) { return d.x })
     .attr('r', function(d) { return d.r })
     .attr('class', 'enemy');
-debugger;
+
   // ENTER + UPDATE
 
   // EXIT
@@ -81,6 +81,8 @@ window.drag = d3.behavior.drag()
 var updatePlayers = function(){
   // DATA JOIN
   var players = board.svg.selectAll('.player').data(board.players);
+  var enemies = board.svg.selectAll('.enemy');
+
 
   // UPDATE
 
@@ -98,11 +100,36 @@ var updatePlayers = function(){
 
   // EXIT
 
+  for (var i = 0; i < players[0].length; i++) {
+    if(checkCollision(players[0][i], enemies[0])){
+      console.log('YOU LOSE!!!!!');
+      //resetScore();
+    }
+  }
   setTimeout(updatePlayers, 10);
 };
 
 var randomBetween = function(min, max) {
   return Math.floor(Math.random()*(max-min) + min);
+};
+
+var checkCollision = function(obj, colliders) {
+  var ax = parseInt(d3.select(obj).attr('cx'));
+  var ay = parseInt(d3.select(obj).attr('cy'));
+  var ar = parseInt(d3.select(obj).attr('r'));
+
+  for (var i = 0; i < colliders.length; i++) {
+    var bx = parseInt(d3.select(colliders[i]).attr('cx'));
+    var by = parseInt(d3.select(colliders[i]).attr('cy'));
+    var br = parseInt(d3.select(colliders[i]).attr('r'));
+
+    var dist = Math.sqrt(Math.pow(bx - ax, 2) + Math.pow(by - ay, 2));
+    if (dist < ar + br) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 init();

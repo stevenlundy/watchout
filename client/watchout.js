@@ -37,7 +37,7 @@ var init = function(){
     highScore: 0,
     collisions: 0,
     numPlayers: 1,
-    numEnemies: 2,
+    numEnemies: 20,
     enemies: [],
     players: []
   };  
@@ -106,9 +106,26 @@ var updateEnemies = function(){
 };
 
 var dragged = function(d) {
+  
+  if(d3.event.x < 0){
+    d.x = d.r;
+  } else if (d3.event.x > window.board.width) {
+    d.x = window.board.width - d.r;
+  } else {
+    d.x = d3.event.x
+  }
+
+  if(d3.event.y < 0){
+    d.y = d.r;
+  } else if (d3.event.y > window.board.height) {
+    d.y = window.board.height - d.r;
+  } else {
+    d.y = d3.event.y
+  }
+
   d3.select(this)
-    .attr('cx', d.x = d3.event.x)
-    .attr('cy', d.y = d3.event.y);
+    .attr('cx', d.x)
+    .attr('cy', d.y);
 }
 window.drag = d3.behavior.drag()
   // .on('dragstart', dragstarted)

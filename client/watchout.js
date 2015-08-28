@@ -9,12 +9,16 @@ var Player = function() {
   this.x = window.board.width/2;
   this.y = window.board.height/2;
   this.r = 10;
+  this.colliding = false;
 };
 
 var init = function(){
   window.board = {
     width: 700,
     height: 500,
+    score: 0,
+    highScore: 0,
+    collisions: 0,
     numPlayers: 1,
     numEnemies: 2,
     enemies: [],
@@ -36,6 +40,17 @@ var init = function(){
     window.board.players.push(new Player());
   }
   updatePlayers();
+};
+
+var resetScore = function(){
+  if(window.board.score > window.board.highScore){
+    window.board.highScore = window.board.score;
+  }
+  window.board.score = 0;
+  window.board.collisions++;
+  d3.select('.high span').text(Math.round(window.board.highScore));
+  d3.select('.current span').text(Math.round(window.board.score));
+  d3.select('.collisions span').text(window.board.collisions);
 };
 
 var updateEnemies = function(){
@@ -102,10 +117,17 @@ var updatePlayers = function(){
 
   for (var i = 0; i < players[0].length; i++) {
     if(checkCollision(players[0][i], enemies[0])){
-      console.log('YOU LOSE!!!!!');
-      //resetScore();
+      if (!window.board.players[i].colliding) {
+        console.log('YOU LOSE!!!!!');
+        window.board.players[i].colliding = true;
+        resetScore();
+      }
+    } else {
+      window.board.players[i].colliding = false;
     }
   }
+  window.board.score += 0.1;
+  d3.select('.current span').text(Math.round(window.board.score));
   setTimeout(updatePlayers, 10);
 };
 

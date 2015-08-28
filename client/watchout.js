@@ -65,6 +65,10 @@ var resetScore = function(){
   }
   window.board.score = 0;
   window.board.collisions++;
+  window.board.svg.transition().duration(250)
+    .style('background-color', 'red')
+    .transition().duration(250)
+    .style('background-color', 'white');
   d3.select('.high span').text(Math.round(window.board.highScore));
   d3.select('.current span').text(Math.round(window.board.score));
   d3.select('.collisions span').text(window.board.collisions);

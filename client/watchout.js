@@ -35,11 +35,12 @@ var init = function(){
   for (var i = 0; i < window.board.numPlayers; i++) {
     window.board.players.push(new Player());
   }
+  updatePlayers();
 };
 
 var updateEnemies = function(){
   // DATA JOIN
-  var enemies = board.svg.selectAll('circle').data(board.enemies);
+  var enemies = board.svg.selectAll('.enemy').data(board.enemies);
 
   // UPDATE
   enemies.transition().duration(1000)
@@ -56,13 +57,36 @@ var updateEnemies = function(){
   enemies.enter().append('circle')
     .attr('cy', function(d) { return d.y })
     .attr('cx', function(d) { return d.x })
-    .attr('r', function(d) { return d.r });
+    .attr('r', function(d) { return d.r })
+    .attr('class', 'enemy');
 
   // ENTER + UPDATE
 
   // EXIT
 
   setTimeout(updateEnemies, 1000);
+};
+
+var updatePlayers = function(){
+  // DATA JOIN
+  var players = board.svg.selectAll('.player').data(board.players);
+
+  // UPDATE
+
+
+  // ENTER
+  players.enter().append('circle')
+    .attr('cy', function(d) { return d.y })
+    .attr('cx', function(d) { return d.x })
+    .attr('r', function(d) { return d.r })
+    .attr('fill', 'red')
+    .attr('class', 'player');
+
+  // ENTER + UPDATE
+
+  // EXIT
+
+  setTimeout(updatePlayers, 10);
 };
 
 var randomBetween = function(min, max) {

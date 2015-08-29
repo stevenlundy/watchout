@@ -81,11 +81,11 @@ var updateEnemies = function(){
   // UPDATE
   enemies.transition().duration(1000)
     .attr('y', function(d) { 
-      d.y = randomBetween(1, window.board.height);
+      d.y = randomBetween(1, window.board.height - d.height);
       return d.y;
     })
     .attr('x', function(d) { 
-      d.x = randomBetween(1, window.board.width);
+      d.x = randomBetween(1, window.board.width - d.width);
       return d.x;
     });
 
@@ -107,17 +107,17 @@ var updateEnemies = function(){
 
 var dragged = function(d) {
   
-  if(d3.event.x < 0){
+  if(d3.event.x < d.r){
     d.x = d.r;
-  } else if (d3.event.x > window.board.width) {
+  } else if (d3.event.x > window.board.width - d.r) {
     d.x = window.board.width - d.r;
   } else {
     d.x = d3.event.x
   }
 
-  if(d3.event.y < 0){
+  if(d3.event.y < d.r){
     d.y = d.r;
-  } else if (d3.event.y > window.board.height) {
+  } else if (d3.event.y > window.board.height - d.r) {
     d.y = window.board.height - d.r;
   } else {
     d.y = d3.event.y

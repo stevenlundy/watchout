@@ -53,17 +53,22 @@ socket.on('initialize', function(board){
 
   updateEnemies();
 
+  var steps = d3.scale.ordinal()
+   .domain(d3.range(window.board.maxPlayers))
+   .rangePoints([0, window.board.width], 1)
+  window.color = d3.scale.category10();
+
   for (var i = 0; i < board.playerCoords.length; i++) {
     var x = board.playerCoords[i].x;
     var y = board.playerCoords[i].y;
-    var hue = i/board.maxPlayers*360;
+    var hue = color(i);
     window.board.players.push(new Player(x, y, false, hue));
   };
 
   if(window.board.players.length < window.board.maxPlayers){
-    var x = (i + 1)*board.width/(board.maxPlayers + 1);
+    var x = steps(i);
     var y = board.height/2;
-    var hue = i/board.maxPlayers*360;
+    var hue = color(i)
     window.board.players.push(new Player(x, y, true, hue));
 
     socket.emit('new player', getCoords(window.board.players));
@@ -81,7 +86,7 @@ socket.on('new player', function(playerCoords){
     var i = window.board.players.length;
     var x = playerCoords[i].x;
     var y = playerCoords[i].y;
-    var hue = i/window.board.maxPlayers*360;
+    var hue = color(i);
     window.board.players.push(new Player(x, y, false, hue));
   }
   updatePlayers(); //remove later
@@ -94,7 +99,7 @@ socket.on('collision', function(player){
   window.board.score = 0;
   window.board.collisions++;
   window.board.svg.transition().duration(250)
-    .style('background-color', 'hsl('+board.players[player].hue+',100%,50%)')
+    .style('background-color', window.board.players[player].hue)
     .transition().duration(250)
     .style('background-color', 'white');
   d3.select('.high span').text(Math.round(window.board.highScore));
@@ -197,7 +202,7 @@ var updatePlayers = function(){
     .attr('cy', function(d) { return d.y })
     .attr('cx', function(d) { return d.x })
     .attr('r', function(d) { return d.r })
-    .attr('fill', function(d) { return 'hsl('+d.hue+',100%,50%)'; })
+    .attr('fill', function(d) { return d.hue; })
     .attr('class', function(d) {
       if(d.local){
         return 'player local';

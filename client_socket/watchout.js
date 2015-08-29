@@ -1,7 +1,7 @@
 var socket = io();
 var isInitialized = false;
 
-// start slingin' some d3 here.
+//  CLASSES
 var Enemy = function(x, y) {
   this.x = x;
   this.y = y;
@@ -25,6 +25,7 @@ var Player = function(x, y, local, hue) {
   this.hue = hue;
 };
 
+// INITIALIZATION
 socket.on('initialize', function(board){
   if (isInitialized){
     return;
@@ -41,16 +42,16 @@ socket.on('initialize', function(board){
 
   extend(window.board, board);
 
+  window.board.svg = d3.select('body').append('svg')
+    .attr('width', window.board.width)
+    .attr('height', window.board.height);
+
+  // Making enemies
   for (var i = 0; i < window.board.numEnemies; i++) {
     var x = board.enemyCoords[i].x;
     var y = board.enemyCoords[i].y;
     window.board.enemies.push(new Shuriken(x, y));
   }
-
-  window.board.svg = d3.select('body').append('svg')
-    .attr('width', window.board.width)
-    .attr('height', window.board.height);
-
   updateEnemies();
 
   var steps = d3.scale.ordinal()
@@ -58,6 +59,7 @@ socket.on('initialize', function(board){
    .rangePoints([0, window.board.width], 1)
   window.color = d3.scale.category10();
 
+  // Making players
   for (var i = 0; i < board.playerCoords.length; i++) {
     var x = board.playerCoords[i].x;
     var y = board.playerCoords[i].y;
@@ -73,87 +75,13 @@ socket.on('initialize', function(board){
 
     socket.emit('new player', getCoords(window.board.players));
   }
-  updatePlayers();
+  
   d3.select('.local').call(window.drag);
   
   isInitialized = true;
 });
 
-socket.on('new player', function(playerCoords){
-  window.board.score = 0;
-  window.board.collisions = 0;
-  if(playerCoords.length > window.board.players.length){
-    var i = window.board.players.length;
-    var x = playerCoords[i].x;
-    var y = playerCoords[i].y;
-    var hue = color(i);
-    window.board.players.push(new Player(x, y, false, hue));
-  }
-  updatePlayers(); //remove later
-});
-
-socket.on('collision', function(player){
-  if(window.board.score > window.board.highScore){
-    window.board.highScore = window.board.score;
-  }
-  window.board.score = 0;
-  window.board.collisions++;
-  window.board.svg.transition().duration(250)
-    .style('background-color', window.board.players[player].hue)
-    .transition().duration(250)
-    .style('background-color', 'white');
-  d3.select('.high span').text(Math.round(window.board.highScore));
-  d3.select('.current span').text(Math.round(window.board.score));
-  d3.select('.collisions span').text(window.board.collisions);
-});
-
-socket.on('enemy update', function(coords){
-  for(var i = 0; i < window.board.enemies.length; i++){
-    extend(window.board.enemies[i], coords[i]);
-  }
-  updateEnemies();
-});
-
-socket.on('player move', function(playerCoords){
-  for (var i = 0; i < window.board.players.length; i++) {
-    if(window.board.players[i].local === false){
-      extend(window.board.players[i], playerCoords[i]);
-    }
-  };
-  updatePlayers();
-})
-
-var updateEnemies = function(){
-  // DATA JOIN
-  var enemies = board.svg.selectAll('.enemy').data(board.enemies);
-
-  // UPDATE
-  enemies.transition().duration(1000)
-    .attr('y', function(d) { 
-      //d.y = randomBetween(1, window.board.height - d.height);
-      return d.y;
-    })
-    .attr('x', function(d) { 
-      //d.x = randomBetween(1, window.board.width - d.width);
-      return d.x;
-    });
-
-  // ENTER
-  enemies.enter().append('image')
-    .attr('y', function(d) { return d.y })
-    .attr('x', function(d) { return d.x })
-    .attr('height', function(d) { return d.height })
-    .attr('width', function(d) { return d.width })
-    .attr('xlink:href', function(d) { return d.url })
-    .attr('class', 'enemy');
-
-  // ENTER + UPDATE
-
-  // EXIT
-
-  //setTimeout(updateEnemies, 1000);
-};
-
+// DRAG FUNCTIONALITY
 var dragged = function(d) {
   
   if(d3.event.x < d.r){
@@ -178,13 +106,82 @@ var dragged = function(d) {
 
   socket.emit('player move', getCoords(board.players));
 }
-
 window.drag = d3.behavior.drag()
-  // .on('dragstart', dragstarted)
   .on('drag', dragged);
-  // .on('dragend', dragended)
 
 
+// NEW PLAYER LISTENER
+socket.on('new player', function(playerCoords){
+  window.board.score = 0;
+  window.board.collisions = 0;
+  if(playerCoords.length > window.board.players.length){
+    var i = window.board.players.length;
+    var x = playerCoords[i].x;
+    var y = playerCoords[i].y;
+    var hue = color(i);
+    window.board.players.push(new Player(x, y, false, hue));
+  }
+});
+
+// ENEMY UPDATE LISTENER
+socket.on('enemy update', function(coords){
+  for(var i = 0; i < window.board.enemies.length; i++){
+    extend(window.board.enemies[i], coords[i]);
+  }
+  updateEnemies();
+});
+
+// PLAYER UPDATE LISTENER
+socket.on('player move', function(playerCoords){
+  for (var i = 0; i < window.board.players.length; i++) {
+    if(window.board.players[i].local === false){
+      extend(window.board.players[i], playerCoords[i]);
+    }
+  };
+  updatePlayers();
+})
+
+// COLLISION LISTENER
+socket.on('collision', function(player){
+  if(window.board.score > window.board.highScore){
+    window.board.highScore = window.board.score;
+  }
+  window.board.score = 0;
+  window.board.collisions++;
+  window.board.svg.transition().duration(250)
+    .style('background-color', window.board.players[player].hue)
+    .transition().duration(250)
+    .style('background-color', 'white');
+  d3.select('.high span').text(Math.round(window.board.highScore));
+  d3.select('.current span').text(Math.round(window.board.score));
+  d3.select('.collisions span').text(window.board.collisions);
+});
+
+// ENEMY UPDATE
+var updateEnemies = function(){
+  // DATA JOIN
+  var enemies = board.svg.selectAll('.enemy').data(board.enemies);
+
+  // UPDATE
+  enemies.transition().duration(1000)
+    .attr('y', function(d) { 
+      return d.y;
+    })
+    .attr('x', function(d) { 
+      return d.x;
+    });
+
+  // ENTER
+  enemies.enter().append('image')
+    .attr('y', function(d) { return d.y })
+    .attr('x', function(d) { return d.x })
+    .attr('height', function(d) { return d.height })
+    .attr('width', function(d) { return d.width })
+    .attr('xlink:href', function(d) { return d.url })
+    .attr('class', 'enemy');
+};
+
+// PLAYER UPDATE
 var updatePlayers = function(){
   // DATA JOIN
   var players = board.svg.selectAll('.player').data(board.players);
@@ -209,12 +206,8 @@ var updatePlayers = function(){
       } 
       return 'player'
     })
-    //.call(window.drag);
 
-  // ENTER + UPDATE
-
-  // EXIT
-
+  // Check local player for collision
   for (var i = 0; i < players[0].length; i++) {
     if(window.board.players[i].local){
       if(checkCollision(players[0][i], enemies[0])){
@@ -230,16 +223,8 @@ var updatePlayers = function(){
     }
   }
 };
-var updateScore = function(){
-  window.board.score++;
-  d3.select('.current span').text(window.board.score);
-}
-setInterval(updateScore, 100);
 
-var randomBetween = function(min, max) {
-  return Math.floor(Math.random()*(max-min) + min);
-};
-
+// COLLISION DETECTION
 var checkCollision = function(obj, colliders) {
   var ax = parseInt(d3.select(obj).attr('cx'));
   var ay = parseInt(d3.select(obj).attr('cy'));
@@ -259,6 +244,19 @@ var checkCollision = function(obj, colliders) {
   return false;
 };
 
+// SCORE UPDATE
+var updateScore = function(){
+  window.board.score++;
+  d3.select('.current span').text(window.board.score);
+}
+setInterval(updateScore, 100);
+
+// FIND RANDOM NUMBER
+var randomBetween = function(min, max) {
+  return Math.floor(Math.random()*(max-min) + min);
+};
+
+// EXTRACT PLAYER COORDINATES
 var getCoords = function(objects) {
   var objCoords = [];
   for (var i = 0; i < objects.length; i++) {

@@ -1,11 +1,21 @@
-var randomBetween = function(min, max) {
-  return Math.floor(Math.random()*(max-min) + min);
-};
+// INITIALIZE SOCKET.IO
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var express = require('express');
 
+app.use('/',  express.static(__dirname + '/'));
+
+app.get('/', function(req, res){
+  res.sendFile(__dirname + '/index.html');
+});
+
+// FIND RANDOM NUMBERS
+var randomBetween = function(min, max) {
+  return Math.floor(Math.random()*(max-min) + min);
+};
+
+// BOARD SETTINGS
 var board = {
   width: 700,
   height: 500,
@@ -15,13 +25,7 @@ var board = {
   enemyCoords: []
 };  
 
-
-app.use('/',  express.static(__dirname + '/'));
-
-app.get('/', function(req, res){
-  res.sendFile(__dirname + '/index.html');
-});
-
+// GENERATE ENEMY COORDINATES
 var enemyCoords = function() {
   board.enemyCoords = []
   for (var i = 0; i < board.numEnemies; i++) {
@@ -32,17 +36,21 @@ var enemyCoords = function() {
   }
 };
 
+// SEND ENEMY INFO
 var updateEnemies = function() {
   enemyCoords();
   io.emit('enemy update', board.enemyCoords);
 };
+updateEnemies();
+setInterval(updateEnemies, 1000);
+
+// SEND PLAYER INFO
 var updatePlayers = function() {
   io.emit('player move', board.playerCoords);
 }
-
-updateEnemies();
-setInterval(updateEnemies, 1000);
 setInterval(updatePlayers, 50);
+
+// EVENT LISTENERS
 io.on('connection', function(socket){
   io.emit('initialize', board);
   socket.on('new player', function(playerCoords){
@@ -57,7 +65,7 @@ io.on('connection', function(socket){
   })
 });
 
-
+// START SERVER
 http.listen(3000, function(){
   console.log('listening on *:3000');
 });

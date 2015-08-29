@@ -11,5 +11,8 @@
   "bugs": {
     "url": "https://github.com/hackreactor-labs/sprint.watchout/issues"
   },
-  "homepage": "https://github.com/hackreactor-labs/sprint.watchout"
+  "homepage": "https://github.com/hackreactor-labs/sprint.watchout",
+  "dependencies": {
+    "express": "^4.10.2"
+  }
 }

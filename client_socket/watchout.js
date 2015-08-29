@@ -31,6 +31,7 @@ socket.on('initialize', function(board){
   }
 
   window.board = {
+    highScore: 0,
     score: 0,
     collisions: 0,
     numPlayers: 1,
@@ -74,6 +75,8 @@ socket.on('initialize', function(board){
 });
 
 socket.on('new player', function(playerCoords){
+  window.board.score = 0;
+  window.board.collisions = 0;
   if(playerCoords.length > window.board.players.length){
     var i = window.board.players.length;
     var x = playerCoords[i].x;
@@ -84,20 +87,20 @@ socket.on('new player', function(playerCoords){
   updatePlayers(); //remove later
 });
 
-var resetScore = function(){
+socket.on('collision', function(player){
   if(window.board.score > window.board.highScore){
     window.board.highScore = window.board.score;
   }
   window.board.score = 0;
   window.board.collisions++;
   window.board.svg.transition().duration(250)
-    .style('background-color', 'red')
+    .style('background-color', 'hsl('+board.players[player].hue+',100%,50%)')
     .transition().duration(250)
     .style('background-color', 'white');
   d3.select('.high span').text(Math.round(window.board.highScore));
   d3.select('.current span').text(Math.round(window.board.score));
   d3.select('.collisions span').text(window.board.collisions);
-};
+});
 
 socket.on('enemy update', function(coords){
   for(var i = 0; i < window.board.enemies.length; i++){
@@ -208,20 +211,25 @@ var updatePlayers = function(){
   // EXIT
 
   for (var i = 0; i < players[0].length; i++) {
-    if(checkCollision(players[0][i], enemies[0])){
-      if (!window.board.players[i].colliding) {
-        console.log('YOU LOSE!!!!!');
-        window.board.players[i].colliding = true;
-        resetScore();
+    if(window.board.players[i].local){
+      if(checkCollision(players[0][i], enemies[0])){
+        if (!window.board.players[i].colliding) {
+          console.log('YOU LOSE!!!!!');
+          window.board.players[i].colliding = true;
+          // resetScore();
+          socket.emit('collision', i);
+        }
+      } else {
+        window.board.players[i].colliding = false;
       }
-    } else {
-      window.board.players[i].colliding = false;
     }
   }
-  window.board.score += 0.1;
-  d3.select('.current span').text(Math.round(window.board.score));
-  setTimeout(updatePlayers, 10);
 };
+var updateScore = function(){
+  window.board.score++;
+  d3.select('.current span').text(window.board.score);
+}
+setInterval(updateScore, 100);
 
 var randomBetween = function(min, max) {
   return Math.floor(Math.random()*(max-min) + min);

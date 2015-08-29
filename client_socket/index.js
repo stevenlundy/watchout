@@ -9,9 +9,8 @@ var express = require('express');
 var board = {
   width: 700,
   height: 500,
-  highScore: 0,
-  maxPlayers: 2,
-  numEnemies: 1,
+  maxPlayers: 4,
+  numEnemies: 10,
   playerCoords: [],
   enemyCoords: []
 };  
@@ -52,9 +51,11 @@ io.on('connection', function(socket){
   });
   socket.on('player move', function(playerCoords){
     board.playerCoords = playerCoords;
+  });
+  socket.on('collision', function(player){
+    io.emit('collision', player);
   })
 });
-
 
 
 http.listen(3000, function(){

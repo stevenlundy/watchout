@@ -11,7 +11,7 @@ var board = {
   height: 500,
   highScore: 0,
   maxPlayers: 2,
-  numEnemies: 20,
+  numEnemies: 1,
   playerCoords: [],
   enemyCoords: []
 };  
@@ -37,16 +37,22 @@ var updateEnemies = function() {
   enemyCoords();
   io.emit('enemy update', board.enemyCoords);
 };
+var updatePlayers = function() {
+  io.emit('player move', board.playerCoords);
+}
+
 updateEnemies();
 setInterval(updateEnemies, 1000);
-
+setInterval(updatePlayers, 50);
 io.on('connection', function(socket){
   io.emit('initialize', board);
   socket.on('new player', function(playerCoords){
     board.playerCoords = playerCoords;
     io.emit('new player', board.playerCoords);
   });
-
+  socket.on('player move', function(playerCoords){
+    board.playerCoords = playerCoords;
+  })
 });
 
 

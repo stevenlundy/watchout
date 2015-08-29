@@ -68,6 +68,7 @@ socket.on('initialize', function(board){
     socket.emit('new player', getCoords(window.board.players));
   }
   updatePlayers();
+  d3.select('.local').call(window.drag);
   
   isInitialized = true;
 });
@@ -104,6 +105,15 @@ socket.on('enemy update', function(coords){
   }
   updateEnemies();
 });
+
+socket.on('player move', function(playerCoords){
+  for (var i = 0; i < window.board.players.length; i++) {
+    if(window.board.players[i].local === false){
+      extend(window.board.players[i], playerCoords[i]);
+    }
+  };
+  updatePlayers();
+})
 
 var updateEnemies = function(){
   // DATA JOIN
@@ -157,6 +167,8 @@ var dragged = function(d) {
   d3.select(this)
     .attr('cx', d.x)
     .attr('cy', d.y);
+
+  socket.emit('player move', getCoords(board.players));
 }
 
 window.drag = d3.behavior.drag()
@@ -172,7 +184,10 @@ var updatePlayers = function(){
 
 
   // UPDATE
-
+  players.filter(function(d){ return !d.local })
+    .transition().duration(50)
+    .attr('cy', function(d) { return d.y })
+    .attr('cx', function(d) { return d.x });
 
   // ENTER
   players.enter().append('circle')
@@ -180,7 +195,12 @@ var updatePlayers = function(){
     .attr('cx', function(d) { return d.x })
     .attr('r', function(d) { return d.r })
     .attr('fill', function(d) { return 'hsl('+d.hue+',100%,50%)'; })
-    .attr('class', 'player')
+    .attr('class', function(d) {
+      if(d.local){
+        return 'player local';
+      } 
+      return 'player'
+    })
     //.call(window.drag);
 
   // ENTER + UPDATE

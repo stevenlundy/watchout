@@ -16,11 +16,13 @@ var Shuriken = function(x, y){
   this.url = 'http://www.wpclipart.com/weapons/knife/throwing/Shuriken_T.png';
 }
 
-var Player = function() {
-  this.x = window.board.width/2;
-  this.y = window.board.height/2;
+var Player = function(x, y, local, hue) {
+  this.x = x;
+  this.y = y;
   this.r = 10;
   this.colliding = false;
+  this.local = local;
+  this.hue = hue;
 };
 
 socket.on('initialize', function(board){
@@ -39,8 +41,8 @@ socket.on('initialize', function(board){
   extend(window.board, board);
 
   for (var i = 0; i < window.board.numEnemies; i++) {
-    var x = board.enemiesCoords[i].x;
-    var y = board.enemiesCoords[i].y;
+    var x = board.enemyCoords[i].x;
+    var y = board.enemyCoords[i].y;
     window.board.enemies.push(new Shuriken(x, y));
   }
 
@@ -50,12 +52,35 @@ socket.on('initialize', function(board){
 
   updateEnemies();
 
-  // for (var i = 0; i < window.board.numPlayers; i++) {
-  //   window.board.players.push(new Player());
-  // }
-  // updatePlayers();
+  for (var i = 0; i < board.playerCoords.length; i++) {
+    var x = board.playerCoords[i].x;
+    var y = board.playerCoords[i].y;
+    var hue = i/board.maxPlayers*360;
+    window.board.players.push(new Player(x, y, false, hue));
+  };
+
+  if(window.board.players.length < window.board.maxPlayers){
+    var x = (i + 1)*board.width/(board.maxPlayers + 1);
+    var y = board.height/2;
+    var hue = i/board.maxPlayers*360;
+    window.board.players.push(new Player(x, y, true, hue));
+
+    socket.emit('new player', getCoords(window.board.players));
+  }
+  updatePlayers();
   
   isInitialized = true;
+});
+
+socket.on('new player', function(playerCoords){
+  if(playerCoords.length > window.board.players.length){
+    var i = window.board.players.length;
+    var x = playerCoords[i].x;
+    var y = playerCoords[i].y;
+    var hue = i/window.board.maxPlayers*360;
+    window.board.players.push(new Player(x, y, false, hue));
+  }
+  updatePlayers(); //remove later
 });
 
 var resetScore = function(){
@@ -133,6 +158,7 @@ var dragged = function(d) {
     .attr('cx', d.x)
     .attr('cy', d.y);
 }
+
 window.drag = d3.behavior.drag()
   // .on('dragstart', dragstarted)
   .on('drag', dragged);
@@ -153,9 +179,9 @@ var updatePlayers = function(){
     .attr('cy', function(d) { return d.y })
     .attr('cx', function(d) { return d.x })
     .attr('r', function(d) { return d.r })
-    .attr('fill', 'red')
+    .attr('fill', function(d) { return 'hsl('+d.hue+',100%,50%)'; })
     .attr('class', 'player')
-    .call(window.drag);
+    //.call(window.drag);
 
   // ENTER + UPDATE
 
@@ -199,6 +225,18 @@ var checkCollision = function(obj, colliders) {
 
   return false;
 };
+
+var getCoords = function(objects) {
+  var objCoords = [];
+  for (var i = 0; i < objects.length; i++) {
+    var coords = {
+      x: objects[i].x,
+      y: objects[i].y
+    };
+    objCoords.push(coords);
+  }
+  return objCoords;
+}
 
 var extend = function(obj) {
   var args = Array.prototype.slice.call(arguments, 1);

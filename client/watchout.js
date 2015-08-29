@@ -147,7 +147,7 @@ var updatePlayers = function(){
     .attr('cy', function(d) { return d.y })
     .attr('cx', function(d) { return d.x })
     .attr('r', function(d) { return d.r })
-    .attr('fill', 'red')
+    .attr('fill', 'hsl(0,100%,50%)')
     .attr('class', 'player')
     .call(window.drag);
 

@@ -1,10 +1,23 @@
 
 var settings = {
-  w: 1600,
-  h: 800,
-  yAxis: 200,
-  xAxis: 200,
-  margin: 50
+  screen: {
+    w: 1600,
+    h: 800
+  },
+  chart: {
+    w: 1400,
+    h: 600,
+    padding: {
+      left: 100,
+      bottom: 100
+    }
+  },
+  margin: {
+    top: 50,
+    bottom: 50,
+    left: 50,
+    right: 50
+  }
 }
 
 // Import data into objects
@@ -58,50 +71,106 @@ var nest = d3.nest()
 
 var spacingHor = d3.scale.ordinal()
   .domain(d3.range(8))
-  .rangePoints([settings.margin + settings.yAxis, settings.w - settings.margin], 1);
+  .rangePoints([0, settings.chart.w], 1);
 
 var spacingVert = d3.scale.ordinal()
   .domain(d3.range(3))
-  .rangePoints([settings.margin, settings.h-settings.xAxis-settings.margin], 1);
+  .rangePoints([0, settings.chart.h], 1);
 
 var color = d3.scale.category20();
 
 var svg = d3.select('body').append('svg')
-  .attr('width', settings.w)
-  .attr('height', settings.h);
+  .attr('width', settings.screen.w)
+  .attr('height', settings.screen.h);
 
 // Draw axes
 var xAxisScale = d3.scale.linear()
   .domain([0, 80])
-  .range([settings.margin + settings.yAxis, settings.w - settings.margin]);
+  .range([0, settings.chart.w]);
 
 var xAxis = d3.svg.axis()
   .scale(xAxisScale);
 
 var xAxisGroup = svg.append("g")
   .attr('class', 'axis')
+  .attr('transform', 'translate('+(settings.margin.left+settings.chart.padding.left)+','+(settings.margin.top+settings.chart.h)+')')
   .call(xAxis);
 
 var yAxisScale = d3.scale.linear()
-  .domain([1, 3])
-  .range([settings.margin, settings.h-settings.xAxis-settings.margin], 1);
+  .domain([0.5, 3.5])
+  .range([0, settings.chart.h], 1);
 
 var yAxis = d3.svg.axis()
   .orient('left')
-  .tickFormat(d3.format(".0f"))
+  .tickFormat(d3.format('.0f'))
   .tickValues([3,2,1])
   .scale(yAxisScale);
 
-var yAxisGroup = svg.append("g")
-  .attr('transform', 'translate(200,0)')
+var yAxisGroup = svg.append('g')
+  .attr('transform', 'translate('+(settings.margin.left+settings.chart.padding.left)+','+settings.margin.top+')')
   .attr('class', 'axis')
   .call(yAxis);
 
+// Label Axes
+svg.append('text')
+  .attr('transform', 'translate('+(settings.margin.left+settings.chart.padding.left+settings.chart.w/2)+','+(settings.chart.h+settings.margin.top+settings.chart.padding.bottom/2)+')')
+  .style('text-anchor', 'middle')
+  .attr('class', 'axis-title')
+  .text('Age');
+
+svg.append('text')
+  .attr('transform', 'rotate(-90)')
+  .attr('y', settings.margin.left + settings.chart.padding.left/2)
+  .attr('x',-(settings.margin.top + settings.chart.h/2))
+  .attr('dy', '1em')
+  .style('text-anchor', 'middle')
+  .attr('class', 'axis-title')
+  .text('Class');
+
+// Input title
+svg.append('text')
+  .attr('transform', 'translate('+(settings.margin.left+settings.chart.w/2)+','+settings.margin.top+')')
+  .style('text-anchor', 'middle')
+  .attr('class', 'chart-title')
+  .text('Titanic Fatalities');
+
+// Draw Legend
+var legend = svg.append("g")
+  .attr("class", "legend")
+  .attr("x", settings.chart.w - 15)
+  .attr("y", settings.margin.top + settings.chart.h - 150)
+  .attr("height", 100)
+  .attr("width", 100);
+
+legend.selectAll('g').data(['Male Survivor', 'Male Fatality', 'Female Survivor', 'Female Fatality'])
+  .enter()
+  .append('g')
+  .each(function(d, i) {
+    var g = d3.select(this);
+    g.append("rect")
+      .attr("x", settings.chart.w - 15)
+      .attr("y", settings.margin.top + settings.chart.h - 150 + i*25)
+      .attr("width", 10)
+      .attr("height", 10)
+      .style("fill", color(i));
+    
+    g.append("text")
+      .attr("x", settings.chart.w - 0)
+      .attr("y", settings.margin.top + settings.chart.h - 150 + i * 25 + 8)
+      .attr("height",30)
+      .attr("width",100)
+      .style("fill", color(i))
+      .text(d);
+
+  });
+
 // Draw pie charts
+var pieCharts = svg.append('svg:g')
+  .attr('transform', 'translate('+(settings.margin.left+settings.chart.padding.left)+','+settings.margin.top+')')
 nest.forEach(function(ageRange, i){
   ageRange.values.forEach(function(classRange, j){
     var data = classRange.values;
-    var vis = svg.append('svg:g').data([data])
+    var vis = pieCharts.append('svg:g').data([data])
       .attr('transform', 'translate(' + spacingHor(i) + ',' + spacingVert(j) + ')');
 
     var pie = d3.layout.pie()

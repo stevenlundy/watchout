@@ -1,5 +1,17 @@
+.axis,
+.axis-title,
+.chart-title,
+.legend{
+  font-family: Helvetica, arial, nimbussansl, liberationsans, freesans, clean, sans-serif;
+}
 .axis text {
-  font: 10px sans-serif;
+  font-size: 14px;
+}
+.axis-title {
+  font-size: 18px;
+}
+.chart-title {
+  font-size: 24px;
 }
 
 .axis line,
